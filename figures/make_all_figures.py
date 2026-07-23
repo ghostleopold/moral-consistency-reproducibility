@@ -13,9 +13,6 @@ driver only orchestrates, it does not relocate anything. The targets:
   density_scatter/
       density_panel_4x4_area_False.png     4x4 error grid, sigma-bar   (no jitter)
       density_panel_4x4_area_True.png      4x4 error grid, area-weighted (no jitter)
-      density_pd_chi_0.02_epsilon_0.02.png disaggregated PD  (jittered, filtered)
-      density_sg_chi_0.02_epsilon_0.02.png disaggregated SG  (jittered, filtered)
-      density_sh_chi_0.02_epsilon_0.02.png disaggregated SH  (jittered, filtered)
 
   scatter_plots/
       scatterplot_panel_4x4_zoom_area_False.png   4x4 zoom scatter (jittered)
@@ -31,6 +28,14 @@ driver only orchestrates, it does not relocate anything. The targets:
   panels_jitter_on_box_on_area/
       scatter_plot_panel_chi_0.02_epsilon_0.02_area_True.png      underlies the
                                                                   area-weighted Fig.
+
+  panels_by_game/
+      scatter_plot_panel_chi_0.02_epsilon_0.02_{pd,sg,sh}.png     the three
+                                                                  disaggregated
+                                                                  a/b composites,
+                                                                  y-axis sigma^PD
+                                                                  / sigma^SG /
+                                                                  sigma^SH
 
 The two jitter-on composites are the a/b panels only: a grey zoom-box is drawn
 on panel a, but NO connecting arrow. The final main-text and area-weighted
@@ -57,7 +62,10 @@ COMPOSITE_ROOTS = (
     "panels_jitter_off_box_on",
     "panels_jitter_on_box_on",
     "panels_jitter_on_box_on_area",
+    "panels_by_game",
 )
+
+GAMES = ("PD", "SG", "SH")
 
 
 def preflight():
@@ -118,15 +126,11 @@ def main():
     print("\n=== 4x4 zoom scatter (jittered) ===")
     sp.plot_panel_4x4_zoom(by_area=False)      # scatter_plots/scatterplot_panel_4x4_zoom_area_False.png
 
-    print("\n=== disaggregated per-game density (jittered, representative filter) ===")
-    for game in ("PD", "SG", "SH"):
-        sp.plot_single_game_density(game, chi=float(BASELINE[0]),
-                                    eps=float(BASELINE[1]))
-
     composites_ok = True
     if not have_magick:
         print("\n! ImageMagick (`magick`) not found -- skipping the composite "
-              "panels (SI 16-grid, Fig. 2 source, area-weighted source).")
+              "panels (SI 16-grid, Fig. 2 source, area-weighted source, "
+              "per-game panels).")
         print("  Install ImageMagick and re-run to build them; every "
               "standalone panel above is already done.")
         composites_ok = False
@@ -147,6 +151,12 @@ def main():
         composites_ok &= run_panels(
             "--area", "--only", *BASELINE,
             label="area-weighted source composite -> panels_jitter_on_box_on_area/")
+        # Per-game a/b composites (baseline errors), one per game, replacing the
+        # old standalone single-game density panels.
+        for game in GAMES:
+            composites_ok &= run_panels(
+                "--game", game, "--only", *BASELINE,
+                label=f"{game} disaggregated composite -> panels_by_game/")
 
     print("\n" + "=" * 60)
     if composites_ok:

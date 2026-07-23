@@ -14,6 +14,8 @@ Two toggles, both default ON:
 Plus:
 
     --area                    area-weighted stability index (default: uniform)
+    --game {PD,SG,SH}         one game's stability index (axis: sigma^PD etc.),
+                              landing in panels_by_game/ -- excludes --area
     --out DIR                 output root (default names itself from the toggles)
 
 Everything for one run lands under a single root so the four combinations never
@@ -28,6 +30,7 @@ Examples:
     ./make_panels.py --no-jitter              # jitter off, box on
     ./make_panels.py --no-jitter --no-box     # jitter off, box off
     ./make_panels.py --jitter --no-box --out /tmp/preview
+    ./make_panels.py --game SH --only 0.02 0.02   # stag-hunt composite
 """
 import argparse
 import os
@@ -115,6 +118,10 @@ def parse_args():
 
     ap.add_argument('--area', action='store_true',
                     help='use the area-weighted stability index')
+    ap.add_argument('--game', choices=('PD', 'SG', 'SH'), default=None,
+                    help="build the composite against a single game's stability "
+                         "index (axis labelled sigma^PD etc.) instead of the "
+                         "aggregate one; incompatible with --area")
     ap.add_argument('--out', default=None,
                     help='output root (default derived from the toggles)')
     ap.add_argument('--only', nargs=2, metavar=('CHI', 'EPS'), default=None,
@@ -126,11 +133,18 @@ def parse_args():
 def main():
     args = parse_args()
 
+    if args.game and args.area:
+        sys.exit("--game and --area are mutually exclusive: the game-specific "
+                 "stability indices are not area-weighted.")
+
     # Jitter amounts mirror the plotting defaults; zeroed when jitter is off.
     density_jitter = sp.JITTER_AMOUNT if args.jitter else 0.0
     zoom_jitter = sp.JITTER_AMOUNT / 5 if args.jitter else 0.0
 
+    # Per-game composites all share one root; the game key rides in each
+    # filename (via sp's name tag), so the three cannot collide.
     root = args.out or (
+        "panels_by_game" if args.game else
         f"panels_jitter_{'on' if args.jitter else 'off'}"
         f"_box_{'on' if args.box else 'off'}"
         + ("_area" if args.area else ""))
@@ -141,20 +155,22 @@ def main():
 
     print(f"jitter={'on' if args.jitter else 'off'}  "
           f"box={'on' if args.box else 'off'}  "
-          f"area={args.area}  ->  {root}/")
+          f"area={args.area}  game={args.game or 'aggregate'}  ->  {root}/")
+
+    name_tag = f"_{args.game.lower()}" if args.game else f"_area_{args.area}"
 
     only = tuple(args.only) if args.only else None
     made, skipped = [], []
     for chi, eps in error_combos(only=only):
         tag = f"chi={chi}, eps={eps}"
         try:
-            sp.plot_single_labeled_density(
-                chi=chi, eps=eps, by_area=args.area,
+            left = sp.plot_single_labeled_density(
+                chi=chi, eps=eps, by_area=args.area, game=args.game,
                 jitter_amount=density_jitter, draw_zoom_box=args.box,
                 out_dir=density_dir,
             )
-            sp.plot_single_zoom_jittered(
-                chi=chi, eps=eps, by_area=args.area,
+            right = sp.plot_single_zoom_jittered(
+                chi=chi, eps=eps, by_area=args.area, game=args.game,
                 jitter_amount=zoom_jitter, out_dir=zoom_dir, file_suffix="",
             )
         except FileNotFoundError as e:
@@ -162,14 +178,8 @@ def main():
             skipped.append(tag)
             continue
 
-        left = os.path.join(
-            density_dir,
-            f"scatterplot_density_chi_{chi}_epsilon_{eps}_area_{args.area}.png")
-        right = os.path.join(
-            zoom_dir,
-            f"scatterplot_zoom_chi_{chi}_epsilon_{eps}_area_{args.area}.png")
-
-        if not (os.path.isfile(left) and os.path.isfile(right)):
+        if not (left and right
+                and os.path.isfile(left) and os.path.isfile(right)):
             # plot_single_zoom_jittered bows out silently when a parameter pair
             # has no consistent discriminators -- nothing to zoom into.
             print(f"Skipping composite for {tag}: a panel was not produced")
@@ -178,7 +188,7 @@ def main():
 
         out = os.path.join(
             root,
-            f"scatter_plot_panel_chi_{chi}_epsilon_{eps}_area_{args.area}.png")
+            f"scatter_plot_panel_chi_{chi}_epsilon_{eps}{name_tag}.png")
         stitch(left, right, out)
         print(f"Wrote {out}")
         made.append(out)

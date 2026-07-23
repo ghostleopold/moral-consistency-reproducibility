@@ -599,6 +599,41 @@ def plot_single_labeled_jittered(chi, eps, by_area=False, jitter_amount=JITTER_A
     print(f"Saved {output_png}")
     plt.close()
 
+GAME_STABILITY_COLS = {
+    'PD': 'stability_index_PD',
+    'SG': 'stability_index_SG',
+    'SH': 'stability_index_SH',
+}
+
+
+def _stability_axis(by_area=False, game=None):
+    """(column, y-axis label, filename tag) for the requested stability index.
+
+    With `game=None` the caller gets the aggregate index -- uniform or
+    area-weighted -- exactly as before. With `game` one of PD/SG/SH the
+    game-specific column is used and the label carries the matching
+    superscript (sigma^PD and friends), which is what distinguishes the
+    disaggregated composites from the aggregate Fig. 2 one. `by_area` has no
+    meaning for a single game, so combining the two is an error rather than a
+    silently ignored argument.
+    """
+    if game is None:
+        col = 'stability_index_area' if by_area else 'stability_index_uniform'
+        label = (r'stability index ($\sigma$, area-weighted)' if by_area
+                 else r'stability index ($\sigma$)')
+        return col, label, f"_area_{by_area}"
+
+    game = game.upper()
+    if game not in GAME_STABILITY_COLS:
+        raise ValueError(
+            f"game must be one of {list(GAME_STABILITY_COLS)}, got {game!r}")
+    if by_area:
+        raise ValueError("by_area and game are mutually exclusive: the "
+                         "game-specific indices are not area-weighted")
+    label = rf'stability index ($\sigma^{{\mathrm{{{game}}}}}$)'
+    return GAME_STABILITY_COLS[game], label, f"_{game.lower()}"
+
+
 def _zoom_box(x, y, margin=0.06):
     """Bounding box (x0, x1, y0, y1) of the given points, padded by `margin`
     of each axis span.
@@ -624,18 +659,22 @@ def plot_single_labeled_density(chi, eps, by_area=False,
                                  l8_face='#C6FF00', l8_edge='#1A1A1A',
                                  l8_edge_lw=0.6, l8_marker='D', l8_size=22,
                                  draw_zoom_box=True, zoom_box_margin=0.06,
-                                 file_suffix=''):
+                                 file_suffix='', game=None):
     """
     Publication-grade variant of plot_single_labeled_jittered.
 
     Renders the ~1M strategy cloud as a hexbin density layer (log-normalized,
     muted single-hue colormap), the morally consistent discriminators as a
     crimson scatter overlay, and the Leading Eight as gold-diamond markers
-    with thin leader-line labels. Saves a PNG to out_dir.
+    with thin leader-line labels. Saves a PNG to out_dir and returns its path.
+
+    `game` (PD/SG/SH) swaps the aggregate stability index for that game's own,
+    labelling the axis sigma^PD and so on; everything else about the panel is
+    unchanged, so the disaggregated composites read as siblings of Fig. 2.
     """
     from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
-    y_col = 'stability_index_area' if by_area else 'stability_index_uniform'
+    y_col, y_label, name_tag = _stability_axis(by_area, game)
 
     file_path = f"{folder}global_complete_chi_{chi}_epsilon_{eps}.csv"
     print(f"Loading {file_path}")
@@ -784,11 +823,7 @@ def plot_single_labeled_density(chi, eps, by_area=False,
     ax.set_xlim(-0.02, 1.02)
     ax.set_ylim(-0.02, 1.02)
     ax.set_xlabel(r'cooperation index ($\kappa$)', fontsize=AXIS_LABEL_PT)
-    ax.set_ylabel(
-        r'stability index ($\sigma$, area-weighted)' if by_area
-        else r'stability index ($\sigma$)',
-        fontsize=AXIS_LABEL_PT,
-    )
+    ax.set_ylabel(y_label, fontsize=AXIS_LABEL_PT)
     ax.tick_params(axis='both', labelsize=TICK_LABEL_PT,
                    length=3.5 * g, width=0.5 * g)
 
@@ -803,13 +838,14 @@ def plot_single_labeled_density(chi, eps, by_area=False,
     os.makedirs(out_dir, exist_ok=True)
     out_png = os.path.join(
         out_dir,
-        f"scatterplot_density_chi_{chi}_epsilon_{eps}_area_{by_area}"
+        f"scatterplot_density_chi_{chi}_epsilon_{eps}{name_tag}"
         f"{file_suffix}.png",
     )
     fig.savefig(out_png, dpi=450)
     print(f"Saved {out_png}")
     plt.close(fig)
     mpl.rcParams.update(prev_rc)
+    return out_png
 
 
 def plot_panel_4x4_density(by_area=False, jitter_amount=0,
@@ -953,7 +989,8 @@ def plot_panel_4x4_density(by_area=False, jitter_amount=0,
 
 def plot_single_zoom_jittered(chi, eps, by_area=False, jitter_amount=JITTER_AMOUNT/5,
                               zoom_box_margin=0.06,
-                              out_dir="scatter_plots", file_suffix="_jittered"):
+                              out_dir="scatter_plots", file_suffix="_jittered",
+                              game=None):
     """
     Generate a single zoom scatterplot with jittering for specified chi/epsilon.
     Shows only consistent discriminating strategies, colored by action rule.
@@ -961,8 +998,13 @@ def plot_single_zoom_jittered(chi, eps, by_area=False, jitter_amount=JITTER_AMOU
 
     `jitter_amount=0` disables jitter entirely; `out_dir`/`file_suffix` let a
     caller park such a variant somewhere other than the canonical output.
+    `game` (PD/SG/SH) plots that game's stability index instead of the
+    aggregate one, matching the density panel it is stitched beside.
+
+    Returns the output path, or None when the parameter pair has no consistent
+    discriminators to zoom into.
     """
-    y_col = 'stability_index_area' if by_area else 'stability_index_uniform'
+    y_col, y_label, name_tag = _stability_axis(by_area, game)
     axis_label_size = 12 * 1.8
     legend_font_size = 10 * 1.8
 
@@ -979,7 +1021,7 @@ def plot_single_zoom_jittered(chi, eps, by_area=False, jitter_amount=JITTER_AMOU
     zoom_data = merged[merged.is_consistent_discriminating == True].copy()
     if zoom_data.empty:
         print(f"No consistent discriminators for chi={chi}, ε={eps}")
-        return
+        return None
 
     # Add jitter
     zoom_data = add_jitter(zoom_data, 'cooperation_index', y_col, amount=jitter_amount)
@@ -1028,11 +1070,7 @@ def plot_single_zoom_jittered(chi, eps, by_area=False, jitter_amount=JITTER_AMOU
         )
 
     plt.xlabel(r'cooperation index ($\kappa$)', fontsize=axis_label_size)
-    plt.ylabel(
-        r'stability index ($\sigma$, area-weighted)' if by_area
-        else r'stability index ($\sigma$)',
-        fontsize=axis_label_size,
-    )
+    plt.ylabel(y_label, fontsize=axis_label_size)
     plt.tick_params(axis='both', labelsize=10 * 1.8)  # Tick labels scaled by 1.5
 
     # Create legend with larger markers
@@ -1052,11 +1090,12 @@ def plot_single_zoom_jittered(chi, eps, by_area=False, jitter_amount=JITTER_AMOU
     os.makedirs(out_dir, exist_ok=True)
     output_png = os.path.join(
         out_dir,
-        f"scatterplot_zoom_chi_{chi}_epsilon_{eps}_area_{by_area}{file_suffix}.png",
+        f"scatterplot_zoom_chi_{chi}_epsilon_{eps}{name_tag}{file_suffix}.png",
     )
     plt.savefig(output_png, dpi=450)
     print(f"Saved {output_png}")
     plt.close()
+    return output_png
 
 def plot_panel_4x4_zoom(by_area=False, jitter_amount=JITTER_AMOUNT/5,
                         zoom_lim=(0.6, 1.0), out_dir='scatter_plots'):
