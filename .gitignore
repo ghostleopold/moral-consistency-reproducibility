@@ -1,0 +1,24 @@
+# Python / editor caches and environments
+.venv/
+__pycache__/
+*.pyc
+.vscode/
+.DS_Store
+
+# Large sweep data -- hosted externally (see README, Data availability)
+/data/
+
+# Generated figure outputs (rebuilt by figures/make_all_figures.py)
+/figures/density_scatter/
+/figures/scatter_plots/
+/figures/panels_jitter_off_box_on/
+/figures/panels_jitter_on_box_on/
+/figures/panels_jitter_on_box_on_area/
+/figures/figure2/
+/figures/no_jitter/
+
+# Solver output and scratch CSVs. payoff_values.csv and mini_payoffs.csv are
+# the archived Monte Carlo samples and ship with the code (force-added).
+*.csv
+!payoff_values.csv
+!mini_payoffs.csv

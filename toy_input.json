@@ -1,0 +1,8 @@
+{
+	"chi" : 0.01,
+	"epsilon" : 0.02,
+	"payoffs_filename" : "mini_payoffs.csv", 
+	"strategy_space" : "toy",
+	"output_filename_local" : "output_local_toy_show.csv",
+	"output_filename_global" : "output_global_toy_show.csv"
+}

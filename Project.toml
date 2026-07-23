@@ -1,0 +1,24 @@
+name = "MoralConsistency"
+uuid = "3548bc92-9c39-4141-9180-8e1889bfa68b"
+authors = ["Julian Garcia <julian.garcia@monash.edu>"]
+version = "0.1.0"
+
+[deps]
+ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+ParetoFront = "6057110d-cf05-48ab-ad92-b75d7f43cb9e"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Roots = "f2b01f46-fcfa-551c-844a-d8ac1e96c665"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[compat]
+ArgParse = "1.2.0"
+CSV = "0.10.15"
+JSON = "0.21.4"
+ParetoFront = "0.1.0"
+ProgressMeter = "1.10.2"
+Revise = "3.6.4"
+StaticArrays = "1.9.11"
