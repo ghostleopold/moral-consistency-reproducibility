@@ -277,14 +277,8 @@ def write_readme(out, drop_pareto):
         pareto_row=(
             "" if drop_pareto else
             "| `pareto_front` | on the frontier of stability_index_uniform"
-            " x cooperation_index, within this file |\n"),
-        pareto_note=(
-            "\n`pareto_front` is not included. It is a frontier over\n"
-            "`stability_index_uniform` x `cooperation_index` computed"
-            " within each\nfile, and is regenerated from these files by"
-            " `generate_pareto_frontier.jl`\nin the code repository.\n"
-            if drop_pareto else "")))
-    print("wrote README.md (stub -- fill in the TODOs)")
+            " x cooperation_index, within this file |\n")))
+    print("wrote README.md")
 
 
 def remanifest(out, drop_pareto, checksums):
@@ -394,10 +388,13 @@ def build(gl, cfg, out, keep_booleans, drop_pareto, checksums):
 
 README_STUB = """# Moral consistency: strategy sweep (v1)
 
-TODO: one-paragraph description of the study, and the citation for the paper
-this dataset accompanies.
+This dataset is an exhaustive sweep of moral systems under indirect reciprocity. A "moral system" pairs an action rule (one of the 16 strategies conditioning on both players' reputations) with an assessment rule (one of the 65,536 fourth-order social norms conditioning on both players' reputations and actions), giving 2^20 = 1,048,576 systems. Each system is evaluated across the full space of symmetric two-player cooperative dilemmas -- prisoner's dilemma, snowdrift, and stag hunt -- and characterised by a cooperation index and by per-game and averaged stability indices at fixed error rates (chi, epsilon). This repository holds the raw per-system solver output and the derived strategy-intrinsic properties used to produce the paper's figures.
 
-Code: <URL of the reproducibility repository, and its commit hash>
+Citation:
+
+> Peña, J., García, J. and Handfield, T. Cooperation thrives when moral judgment matches moral conduct. Working paper, 2026.
+
+Code: https://github.com/ghostleopold/moral-consistency-reproducibility (branch `reproducibility`, commit b542609)
 
 ## Layout
 
@@ -416,18 +413,18 @@ The global files cover the full strategy space of 1,048,576 systems
 |---|---|
 | `p` | action rule, integer 0-15 |
 | `d` | assessment rule, integer 0-65535 |
-| `resident_reputation_eq` | TODO |
-| `cooperation_index` | TODO |
-| `stability_index_PD` | TODO (Prisoner's Dilemma) |
-| `stability_index_SG` | TODO (Snowdrift) |
-| `stability_index_SH` | TODO (Stag Hunt) |
-| `stability_index_uniform` | TODO |
-| `stability_index_area` | TODO |
+| `resident_reputation_eq` | The reputation in equilibrium of the system when it is resident |
+| `cooperation_index` | The probability a resident cooperates at reputation equilibrium |
+| `stability_index_PD` | Proportion of the payoff space for the prisoner's dilemma in which the system is a strict ESS |
+| `stability_index_SG` | Proportion of the payoff space for the snowdrift game in which the system is a strict ESS |
+| `stability_index_SH` | Proportion of the payoff space for the stag-hunt in which the system is a strict ESS |
+| `stability_index_uniform` | Uniformly-weighted average of the three game-based stability indices |
+| `stability_index_area` | Area-weighted average of the three game-based stability indices |
 {pareto_row}
 Each stability index is a Monte Carlo estimate over the same 1000 archived
 payoff configurations per game class (see the code repository's
 `payoff_values.csv`).
-{pareto_note}
+
 ## derived/
 
 `universal_properties.csv` -- strategy-intrinsic properties, keyed on
@@ -457,7 +454,7 @@ checksums, its SHA-256.
 
 ## License
 
-TODO
+CC0
 """
 
 
