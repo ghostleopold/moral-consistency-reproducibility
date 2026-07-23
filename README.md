@@ -120,7 +120,7 @@ each written to the location its own script already uses:
 |---|---|
 | Error-grid density panels (no jitter) | `density_scatter/density_panel_4x4_area_{False,True}.png` |
 | Zoom scatter grid (jittered) | `scatter_plots/scatterplot_panel_4x4_zoom_area_False.png` |
-| Disaggregated per-game density (jittered) | `density_scatter/density_{pd,sg,sh}_chi_0.02_epsilon_0.02.png` |
+| Disaggregated per-game a/b composites (jittered) | `panels_by_game/scatter_plot_panel_chi_0.02_epsilon_0.02_{pd,sg,sh}.png` |
 | 16 no-jitter SI composites | `panels_jitter_off_box_on/scatter_plot_panel_chi_*_area_False.png` |
 | Main-text Fig. 2 source panel | `panels_jitter_on_box_on/scatter_plot_panel_chi_0.02_epsilon_0.02_area_False.png` |
 | Area-weighted figure source panel | `panels_jitter_on_box_on_area/scatter_plot_panel_chi_0.02_epsilon_0.02_area_True.png` |
