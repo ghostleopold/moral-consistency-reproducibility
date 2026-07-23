@@ -54,8 +54,8 @@ from the published figures. Install Helvetica Neue for an exact match.
 ## Installation
 
 ```sh
-git clone https://github.com/juliangarcia/MoralConsistency.git
-cd MoralConsistency
+git clone https://github.com/ghostleopold/moral-consistency-reproducibility.git
+cd moral-consistency-reproducibility
 julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'
 ```
 
