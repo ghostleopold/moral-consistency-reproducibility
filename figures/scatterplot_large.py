@@ -606,6 +606,32 @@ GAME_STABILITY_COLS = {
 }
 
 
+# Colorbar placement for the density panel, as an axes-fraction [x, y, w, h]
+# passed to ax.inset_axes. With the axes spanning -0.02..1.02 on both sides,
+# a stability value v sits at fraction (v + 0.02) / 1.04.
+#
+# The aggregate panel's cloud leaves the top-left corner empty, so the key
+# lives there. The per-game clouds do not: the stag hunt piles systems along
+# sigma^SH = 1 across the whole width, and the prisoner's dilemma reaches high
+# enough on the left to be nicked. Each game therefore parks the key in its own
+# empty band, always flush left.
+CBAR_INSET = [0.04, 0.94, 0.22, 0.018]
+CBAR_INSET_BY_GAME = {
+    'PD': [0.04, 0.788, 0.22, 0.018],   # sigma^PD ~ 0.8
+    'SH': [0.04, 0.423, 0.22, 0.018],   # sigma^SH ~ 0.42
+    'SG': list(CBAR_INSET),             # top-left corner is clear
+}
+
+
+def _cbar_inset(game=None, override=None):
+    """Axes-fraction rectangle for the density panel's inset colorbar."""
+    if override is not None:
+        return list(override)
+    if game is None:
+        return list(CBAR_INSET)
+    return list(CBAR_INSET_BY_GAME.get(game.upper(), CBAR_INSET))
+
+
 def _stability_axis(by_area=False, game=None):
     """(column, y-axis label, filename tag) for the requested stability index.
 
@@ -659,7 +685,7 @@ def plot_single_labeled_density(chi, eps, by_area=False,
                                  l8_face='#C6FF00', l8_edge='#1A1A1A',
                                  l8_edge_lw=0.6, l8_marker='D', l8_size=22,
                                  draw_zoom_box=True, zoom_box_margin=0.06,
-                                 file_suffix='', game=None):
+                                 file_suffix='', game=None, cbar_inset=None):
     """
     Publication-grade variant of plot_single_labeled_jittered.
 
@@ -671,6 +697,8 @@ def plot_single_labeled_density(chi, eps, by_area=False,
     `game` (PD/SG/SH) swaps the aggregate stability index for that game's own,
     labelling the axis sigma^PD and so on; everything else about the panel is
     unchanged, so the disaggregated composites read as siblings of Fig. 2.
+    `cbar_inset` overrides the inset colorbar's axes-fraction rectangle, whose
+    per-game default keeps the key off the data (see CBAR_INSET_BY_GAME).
     """
     from matplotlib.colors import LinearSegmentedColormap, LogNorm
 
@@ -827,9 +855,11 @@ def plot_single_labeled_density(chi, eps, by_area=False,
     ax.tick_params(axis='both', labelsize=TICK_LABEL_PT,
                    length=3.5 * g, width=0.5 * g)
 
-    # Inset colorbar (horizontal, lower-left). Decorative — kept at its
-    # original apparent size by scaling its geometry and text with g.
-    cax = ax.inset_axes([0.04, 0.94, 0.22, 0.018])
+    # Inset colorbar (horizontal, flush left). Decorative — kept at its
+    # original apparent size by scaling its geometry and text with g. Its
+    # height on the axes varies by game so it never sits over the cloud;
+    # see CBAR_INSET_BY_GAME.
+    cax = ax.inset_axes(_cbar_inset(game, cbar_inset))
     cb = fig.colorbar(hb, cax=cax, orientation='horizontal')
     cb.outline.set_linewidth(0.4 * g)
     cb.ax.tick_params(labelsize=7 * g * 1.1, length=2 * g, width=0.4 * g, pad=1.5 * g)
