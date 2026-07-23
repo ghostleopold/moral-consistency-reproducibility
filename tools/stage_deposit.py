@@ -394,7 +394,7 @@ Citation:
 
 > Peña, J., García, J. and Handfield, T. Cooperation thrives when moral judgment matches moral conduct. Working paper, 2026.
 
-Code: https://github.com/ghostleopold/moral-consistency-reproducibility (branch `reproducibility`, commit b542609)
+Code: https://github.com/ghostleopold/moral-consistency-reproducibility (branch `reproducibility`, commit a133039)
 
 ## Layout
 

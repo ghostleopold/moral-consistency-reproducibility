@@ -64,7 +64,8 @@ julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'
 The full strategy sweep (one row per moral system, for each error-rate
 combination) is too large to host in git and is archived separately:
 
-> **Data deposit:** _Bridges (Monash) — DOI/URL to be confirmed._
+> **Data deposit:** _Moral consistency: strategy sweep (v1)_, Bridges (Monash).
+> DOI: [10.26180/33068042](https://doi.org/10.26180/33068042).
 
 Download and unzip the deposit, then put its two pieces where the scripts
 expect them. From the repository root:
