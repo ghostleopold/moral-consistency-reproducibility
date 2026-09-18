@@ -31,6 +31,14 @@ and of the action rules (`p`):
 Dependencies are listed in `Project.toml` and pinned in `Manifest.toml`; install
 with `Pkg.instantiate()` (below).
 
+**Operating systems.** The Julia pipeline and the demo below were tested on
+Linux (Fedora 44, kernel 7.1, x86-64) with Julia 1.10.10; the figure scripts
+were developed on macOS. Any platform supported by Julia 1.10 should work.
+
+**Hardware.** No non-standard hardware is required. A multi-core desktop or
+laptop is recommended for the full sweep (see Multi-threading); the demo below
+runs on a single core.
+
 **Python 3** (3.11 or later), for the figures. The scripts use:
 
 - `pandas`, `numpy`
@@ -58,6 +66,50 @@ git clone https://github.com/ghostleopold/moral-consistency-reproducibility.git
 cd moral-consistency-reproducibility
 julia -e 'using Pkg; Pkg.activate("."); Pkg.instantiate()'
 ```
+
+Typical install time on a normal desktop computer: about one minute for
+`Pkg.instantiate()` once Julia is installed (45 s on a 2025 laptop, dominated
+by precompilation), plus the package downloads.
+
+## Demo
+
+A small demo runs the complete pipeline on a toy strategy space against a
+mini payoff sample, both shipped with the repository:
+
+- `toy_input.json` -- the demo configuration (chi = 0.01, epsilon = 0.02,
+  `strategy_space: toy`);
+- `mini_payoffs.csv` -- 9 payoff configurations, 3 per game class (PD, SG,
+  SH), in the same format as the archived `payoff_values.csv`.
+
+The toy space pairs 4 action rules (`p` = 8 to 11) with 7 social norms
+(`d` = 0, 100, 1000, 1001, 1002, 50124, 53196), 28 moral systems in total.
+`main.jl` uses `toy_input.json` when no `--json` argument is given:
+
+```sh
+julia main.jl
+```
+
+Expected run time: under 10 seconds on a normal desktop computer (6.6 s
+including Julia start-up on a 2025 laptop, single thread). Expected output: the
+console prints `Running test file...` and a progress bar, and two CSV files are
+written to the repository root:
+
+- `output_local_toy_show.csv` (84 rows): one row per moral system and game
+  class, with columns `p, d, game, stability_index, sampled_points`. For the
+  demo, `sampled_points` is 3 for every row (the 3 payoff configurations of
+  that class) and `stability_index` is the fraction of them at which the
+  system is stable, so it takes the values 0, 1/3, 2/3, or 1.
+- `output_global_toy_show.csv` (28 rows): one row per moral system, with
+  columns `p, d, resident_reputation_eq, cooperation_index,
+  stability_index_PD, stability_index_SG, stability_index_SH,
+  stability_index_uniform, stability_index_area`. For example, the first row
+  (`p` = 8, `d` = 0) has resident reputation equilibrium 0.01, cooperation
+  index 9.8e-5, and stability indices (0, 0, 1) for (PD, SG, SH), giving a
+  uniform average of 1/3.
+
+These files are the same kind of output the full sweep produces (with
+`sampled_points` = 1000 and 524,800 rows per game class), so the demo exercises
+every step of `compute_local_properties` and `compute_global_properties`.
 
 ## Data availability
 
